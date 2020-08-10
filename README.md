@@ -6,6 +6,8 @@ Author: Daniel Siechniewicz <daniel@nulldowntime.com>
 
 This is a command line application that parses a single line in crontab format and returns a table with all time definitions expanded to their numeric equivalents, plus a command "as is".
 
+The implementation *deliberately doesn't use* existing cron modules.
+
 ## Setting up
 
 No external (non-standard) packages are used. As long as go is installed it should be possible to compile and/or run this utility. go.mod is provided to be able to use this outside of go path.
