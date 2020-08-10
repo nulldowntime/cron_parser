@@ -14,12 +14,17 @@ func printHelp() {
 	fmt.Println(`	parse_cron "only one argument that's a valid single line crontab format without special strings like @yearly"`)
 }
 
-func parseCronLine(l string) error {
+// parseCronLine takes a sting that should be a valid line in crontab format and
+// prints a table with all the values properly expanded
+func parseCronLine(l string) (string, error) {
+
+	var out string
+
 	// Of course the regex could be a lot more sophisticated
 	re := regexp.MustCompile(`^(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(.+)$`)
 	validCronLine := re.MatchString(l)
 	if !validCronLine {
-		return errors.New("Cron line does not comply with standard format")
+		return "", errors.New("Cron line does not comply with standard format")
 	}
 
 	subMatch := re.FindStringSubmatch(l)
@@ -33,38 +38,33 @@ func parseCronLine(l string) error {
 
 	minutesParsed, err := parseMinute(minuteStr)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return out, fmt.Errorf("problem parsing minutes: %v", err)
 	}
 	hoursParsed, err := parseHours(hourStr)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return out, fmt.Errorf("problem parsing hours: %v", err)
 	}
 	dayOfMonthParsed, err := parseDayOfMonth(dayOfMonthStr)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return out, fmt.Errorf("problem parsing days of the month: %v", err)
 	}
 	monthParsed, err := parseMonth(monthStr)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return out, fmt.Errorf("problem parsing months: %v", err)
 	}
 	dayOfWeekParsed, err := parseDayOfWeek(dayOfWeekStr)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return out, fmt.Errorf("problem parsing days of the week: %v", err)
 	}
 
-	fmt.Printf("%-14s%s\n", "minute", joinInts(minutesParsed))
-	fmt.Printf("%-14s%s\n", "hour", joinInts(hoursParsed))
-	fmt.Printf("%-14s%s\n", "day of month", joinInts(dayOfMonthParsed))
-	fmt.Printf("%-14s%s\n", "month", joinInts(monthParsed))
-	fmt.Printf("%-14s%s\n", "day of week", joinInts(dayOfWeekParsed))
-	fmt.Printf("%-14s%s\n", "command", commandStr)
+	out = fmt.Sprintf("%-14s%s\n", "minute", joinInts(minutesParsed)) +
+		fmt.Sprintf("%-14s%s\n", "hour", joinInts(hoursParsed)) +
+		fmt.Sprintf("%-14s%s\n", "day of month", joinInts(dayOfMonthParsed)) +
+		fmt.Sprintf("%-14s%s\n", "month", joinInts(monthParsed)) +
+		fmt.Sprintf("%-14s%s\n", "day of week", joinInts(dayOfWeekParsed)) +
+		fmt.Sprintf("%-14s%s\n", "command", commandStr)
 
-	return nil
+	return out, nil
 }
 
 func joinInts(sl []int) string {
@@ -217,6 +217,14 @@ func parseNumDef(s string, start int, limit int) ([]int, error) {
 		return numList, fmt.Errorf("Invalid crontab format, %s is not a valid cron definition", s)
 	}
 
+	if num < start {
+		return numList, fmt.Errorf("Individual number %d lower than allowed: %d", num, start)
+	}
+
+	if num > limit {
+		return numList, fmt.Errorf("Individual numeber: %d greater than allowed: %d", num, limit)
+	}
+
 	numList = []int{num}
 	return numList, nil
 }
@@ -297,11 +305,12 @@ func main() {
 	case argCount == 2:
 		cronLine := os.Args[1]
 		//fmt.Println(cronLine)
-		err := parseCronLine(cronLine)
+		out, err := parseCronLine(cronLine)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
+		fmt.Print(out)
 	case argCount > 2:
 		fmt.Println("Too many arguments")
 		printHelp()

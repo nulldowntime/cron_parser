@@ -8,19 +8,27 @@ This is a command line application that parses a single line in crontab format a
 
 ## Setting up
 
-No external (non-standard) packages are used. As long as go is installed it should be possible to compile and/or run this utility. go.mod is provided to be able to use this outside of go path, although it uses a fake module path.
+No external (non-standard) packages are used. As long as go is installed it should be possible to compile and/or run this utility. go.mod is provided to be able to use this outside of go path.
 
 ### Run in DEV
 
-go run parse_cron.go "*/15 0 1,15 * 1-5 /usr/bin/find"
+`go run parse_cron.go "*/15 0 1,15 * 1-5 /usr/bin/find"`
 
 ### Build
 
-go build -o parse_cron
+`go build -o parse_cron`
 
 ### Run binary
 
-./parse_cron "*/15 0 1,15 * 1-5 /usr/bin/find"
+`./parse_cron "*/15 0 1,15 * 1-5 /usr/bin/find"`
+
+## Tests
+
+For now only the parseCronLine is tested with valid an invalid input lines. Please see parse_cron_test.go for details.
+
+### Run tests
+
+`go test`
 
 ## Caveats/Missing features
 
